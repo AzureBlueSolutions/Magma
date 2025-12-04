@@ -1,0 +1,35 @@
+name: Create Azure DevOps Bug Work Item
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  create-bug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create DevOps Bug work item
+        env:
+          AZDO_ORG_URL: ${{ secrets.AZDO_ORG_URL }}
+          AZDO_PROJECT: ${{ secrets.AZDO_PROJECT }}
+          AZDO_PAT: ${{ secrets.AZDO_PAT }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          echo "Creating Azure DevOps Bug work item..."
+          curl -X POST \
+            -u :$AZDO_PAT \
+            -H "Content-Type: application/json-patch+json" \
+            -d "[
+              {
+                \"op\": \"add\",
+                \"path\": \"/fields/System.Title\",
+                \"value\": \"$ISSUE_TITLE\"
+              },
+              {
+                \"op\": \"add\",
+                \"path\": \"/fields/System.Description\",
+                \"value\": \"$ISSUE_BODY\"
+              }
+            ]" \
+            "$AZDO_ORG_URL/$AZDO_PROJECT/_apis/wit/workitems/\$Bug?api-version=7.1-preview.3"
